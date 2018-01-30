@@ -15,7 +15,7 @@ if [[ ${DEBUG_LOGGING} == true ]]
 fi
 
 # chown the nexus home directory
-chown -R nexus:nexus ${NEXUS_HOME}
+chown -R nexus:nexus "${SONATYPE_DIR}"
 
 echo "Executing provision.sh"
 nohup /usr/local/bin/provision.sh &
