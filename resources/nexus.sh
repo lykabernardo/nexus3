@@ -14,11 +14,6 @@ if [[ ${DEBUG_LOGGING} == true ]]
   cp /resources/conf/logback/logback-access.xml ${NEXUS_HOME}/etc/logback/
 fi
 
-if [ -n "${USER_AGENT}" ]
-       then
-       echo "nexus.browserdetector.excludedUserAgents=${USER_AGENT}" >> ${NEXUS_DATA}/etc/nexus.properties
-fi
-
 # chown the nexus home directory
 chown -R nexus:nexus ${NEXUS_HOME}
 
@@ -27,5 +22,5 @@ nohup /usr/local/bin/provision.sh &
 echo "$(date) - Base URL: ${NEXUS_BASE_URL}"
 
 # start nexus as the nexus user
-sh -c ${SONATYPE_DIR}/start-nexus-repository-manager.sh
+su -c "${SONATYPE_DIR}/start-nexus-repository-manager.sh" -s /bin/sh nexus
 

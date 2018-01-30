@@ -26,13 +26,13 @@ echo "* Waiting for the Nexus3 to become available - this can take a few minutes
 TOOL_SLEEP_TIME=30
 until [[ $(curl -I -s -u "${username}":"${password}" localhost:8081/${NEXUS_CONTEXT}/|head -n 1|cut -d$' ' -f2) == 200 ]]; do pretty_sleep ${TOOL_SLEEP_TIME} Nexus3; done
 
-function addAndRunScript {
+function addAndRunScript() {
   name=$1
   file=$2
-  args=${3:-false}
+  eval args="${3:-false}"
   groovy -Dgroovy.grape.report.downloads=true resources/conf/addUpdatescript.groovy -u "$username" -p "$password" -n "$name" -f "$file" -h "$nexus_host"
   printf "\nPublished $file as $name\n\n"
-  curl -v -X POST -u $username:$password --header "Content-Type: text/plain" "$nexus_host/service/siesta/rest/v1/script/$name/run" -d $args
+  curl -v -X POST -u $username:$password --header "Content-Type: text/plain" "$nexus_host/service/siesta/rest/v1/script/$name/run" -d "$args"
   printf "\nSuccessfully executed $name script\n\n\n"
 }
 
@@ -44,7 +44,7 @@ if [ -n "${NEXUS_BASE_URL}" ]
   then
   # Add base url - requests timeout if incorrect
   baseUrlArg="{\"base_url\":\"${NEXUS_BASE_URL}\"}"
-  addAndRunScript baseUrl resources/conf/setup_base_url.groovy $baseUrlArg
+  addAndRunScript baseUrl resources/conf/setup_base_url.groovy "\${baseUrlArg}"
   echo "$(date) - Base URL: ${NEXUS_BASE_URL}"
 fi
 
@@ -52,7 +52,8 @@ if [ -n "${USER_AGENT}" ]
   then
   echo "$(date) - User Agent: ${USER_AGENT}"
   userAgentArg="{\"user_agent\":\"${USER_AGENT}\"}"
-  addAndRunScript userAgent resources/conf/setup_user_agent.groovy $userAgentArg
+  addAndRunScript userAgent resources/conf/setup_user_agent.groovy "\${userAgentArg}"
+fi
 
 # Update Remote proxy configuration
 if [[ -n "${NEXUS_PROXY_HOST}" ]] && [[ -n "${NEXUS_PROXY_PORT}" ]]
@@ -60,7 +61,7 @@ if [[ -n "${NEXUS_PROXY_HOST}" ]] && [[ -n "${NEXUS_PROXY_PORT}" ]]
   echo "$(date) - Proxy Host: ${NEXUS_PROXY_HOST}"
   echo "$(date) - Proxy Port: ${NEXUS_PROXY_PORT}"
   remoteProxyArg="{\"with_http_proxy\":\"true\",\"http_proxy_host\":\"${NEXUS_PROXY_HOST}\",\"http_proxy_port\":\"${NEXUS_PROXY_PORT}\"}"	
-  addAndRunScript remoteProxy resources/conf/setup_http_proxy.groovy $remoteProxyArg
+  addAndRunScript remoteProxy resources/conf/setup_http_proxy.groovy "\${remoteProxyArg}"
 fi
 
 #LDAP parameters when LDAP is enabled 
@@ -68,19 +69,19 @@ LDAP_USER_GROUP_CONFIG="{\"name\":\"$LDAP_NAME\",\"map_groups_as_roles\":\"$LDAP
 
 if [ "${LDAP_ENABLED}" = "true" ]
   then 
-    addAndRunScript ldapConfig resources/conf/ldapconfig.groovy $LDAP_USER_GROUP_CONFIG  
+    addAndRunScript ldapConfig resources/conf/ldapconfig.groovy "\${LDAP_USER_GROUP_CONFIG}"
   if [[ "${NEXUS_CREATE_CUSTOM_ROLES}" == "true" ]];
    then
     echo "$(date) - Creating custom roles and mappings..."
     [[ -n "${NEXUS_CUSTOM_ADMIN_ROLE}" ]] 
     NEXUS_ADMIN_ROLE_CONFIG="{\"id\":\"$NEXUS_CUSTOM_ADMIN_ROLE\",\"name\":\"Admin\",\"description\":\"Adminstration_Role\",\"privileges\":\"nx-all\",\"role\":\"nx-admin\"}"
-    addAndRunScript insertRole resources/conf/insertrole.groovy $NEXUS_ADMIN_ROLE_CONFIG
+    addAndRunScript insertRole resources/conf/insertrole.groovy "\${NEXUS_ADMIN_ROLE_CONFIG}"
     [[ -n "${NEXUS_CUSTOM_DEPLOY_ROLE}" ]]
     NEXUS_DEPLOY_ROLE_CONFIG="{\"id\":\"$NEXUS_CUSTOM_DEPLOY_ROLE\",\"name\":\"Deployment\",\"description\":\"Deployment_Role\",\"privileges\":"[\"nx-ldap-all\",\"nx-roles-all\"]",\"role\":\"nx-admin\"}"
-    addAndRunScript insertRole resources/conf/insertrole.groovy $NEXUS_DEPLOY_ROLE_CONFIG
+    addAndRunScript insertRole resources/conf/insertrole.groovy "\${NEXUS_DEPLOY_ROLE_CONFIG}"
     [[ -n "${NEXUS_CUSTOM_DEV_ROLE}" ]]
     NEXUS_DEVELOP_ROLE_CONFIG="{\"id\":\"$NEXUS_CUSTOM_DEV_ROLE\",\"name\":\"Developer\",\"description\":\"Developer_Role\",\"privileges\":"[\"nx-roles-update\",\"nx-ldap-update\"]",\"role\":"[\"nx-admin\",\"nx-anonymous\"]"}"
-    addAndRunScript insertRole resources/conf/insertrole.groovy $NEXUS_DEVELOP_ROLE_CONFIG
+    addAndRunScript insertRole resources/conf/insertrole.groovy "\${NEXUS_DEVELOP_ROLE_CONFIG}"
   fi
  fi
 
@@ -94,7 +95,7 @@ grep -qF "$Property" "$File" || echo "$Property" | tee --append "$File"
 if [ -n "${NEXUS_ADMIN_PASSWORD}" ]
   then
   NEXUS_PASSWORD="{\"new_password\":\"$NEXUS_ADMIN_PASSWORD\"}"
-  addAndRunScript updatePassword resources/conf/update_admin_password.groovy $NEXUS_PASSWORD
+  addAndRunScript updatePassword resources/conf/update_admin_password.groovy "\${NEXUS_PASSWORD}"
 fi
 
 
