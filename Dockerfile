@@ -2,6 +2,7 @@ FROM sonatype/nexus3:3.7.1
 
 
 ENV LDAP_ENABLED=true \
+    NEXUS_CONTEXT=nexus \
     DEBUG_LOGGING=false \
     LDAP_SEARCH_BASE="" \
     LDAP_URL="" \

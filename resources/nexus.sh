@@ -14,13 +14,12 @@ if [[ ${DEBUG_LOGGING} == true ]]
   cp /resources/conf/logback/logback-access.xml ${NEXUS_HOME}/etc/logback/
 fi
 
-# chown the nexus home directory
-chown -R nexus:nexus "${SONATYPE_DIR}"
+# Chown the nexus data directory
+chown -R nexus:nexus "${NEXUS_DATA}"
 
 echo "Executing provision.sh"
 nohup /usr/local/bin/provision.sh &
-echo "$(date) - Base URL: ${NEXUS_BASE_URL}"
 
-# start nexus as the nexus user
+# Start nexus as the nexus user
 su -c "${SONATYPE_DIR}/start-nexus-repository-manager.sh" -s /bin/sh nexus
 
